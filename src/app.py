@@ -6,6 +6,7 @@ from flask import Flask, request, jsonify, url_for
 from flask_cors import CORS
 from utils import APIException, generate_sitemap
 from datastructures import FamilyStructure
+import json
 #from models import Person
 
 app = Flask(__name__)
@@ -31,25 +32,20 @@ def handle_hello():
     # this is how you can use the Family datastructure by calling its methods
     members = jackson_family.get_all_members()
     response_body = {
-        "hello": "world",
+        "hello": "world2",
         "family": members
     }
-
-
     return jsonify(response_body), 200
 
-@app.route('/member/<int:member_id>', methods=['GET'])
-def handle_member():
+@app.route('/member/<int:id>', methods=['GET'])
+def handle_member(id):
 
     # this is how you can use the Family datastructure by calling its methods
     member = jackson_family.get_member(id)
-    response_body = {
-        "id": member.id,
-        "first_name": member.first_name,
-        "age": member.age,
-        "lucky_numbers": member.lucky_numbers
-    }
-    return jsonify(response_body), 200
+    if not member:
+        return jsonify({}), 404
+               
+    return jsonify(member), 200
 
 @app.route('/member', methods=['POST'])
 def handle_add():
@@ -59,13 +55,28 @@ def handle_add():
     jackson_family.add_member(member)
 
     return jsonify({}), 200
-    
-@app.route('/member/<int:member_id>', methods=['DELETE'])
-def handle_delete():
+
+@app.route('/member', methods=['PUT'])
+def handle_update():
 
     # this is how you can use the Family datastructure by calling its methods
     member = json.loads(request.data)
-    jackson_family.delete_member(member)
+    member_res = jackson_family.update_member(member)
+    if not member_res:
+        return jsonify({}), 404 
+    
+    return jsonify({}), 200 
+
+@app.route('/member/<int:id>', methods=['DELETE'])
+def handle_delete(id):
+
+    # this is how you can use the Family datastructure by calling its methods
+   # member = json.loads(request.data)
+    member = jackson_family.delete_member(id)
+
+    if not member:
+        return jsonify({}), 404
+
     response_body = {
         "done": "True"
     }
